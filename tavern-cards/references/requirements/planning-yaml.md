@@ -9,7 +9,7 @@ project:
   form: charactercard
   mvu: true
   avatar: path/to/avatar.png
-  ui_mode: text    # 有效值：text（纯文字版）/ frontend（前端版）/ none（不需要）/ 缺省表示待定
+  ui_mode: text    # 有效值：text（纯文字版）/ simple（单HTML状态栏：原生或Vue，由状态栏需求判定）/ frontend（前端版）/ none（不需要）/ 缺省表示待定
 
 world:
   overview: 现代都市修仙世界，灵气复苏后修仙者融入现代社会…

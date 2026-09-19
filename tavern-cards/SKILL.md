@@ -65,9 +65,10 @@ description: "创建、编辑、评估 SillyTavern 角色卡和世界书（角�
 9. **UI 界面开发**（如使用 MVU）
     - 读取 `创作规划.yaml` 的 `ui_mode`：
       - `text` → 编辑 `正则/状态栏界面.html`（详见 `references/ui/text.md`）
+      - `simple` → 单 HTML 状态栏路线：先读 `tavern-ui/references/statusbar-simple/briefing.md` 判定原生/Vue 路线与需求合同，再按对应 build 篇生成并写入 `正则/状态栏界面.html`
       - `frontend` → 调用 tavern-ui skill
       - `none` → 跳过，直接进入步骤 10
-      - `pending` / 缺失 → 不可进入此步，先收敛为 text / frontend / none
+      - `pending` / 缺失 → 不可进入此步，先收敛为 text / simple / frontend / none
 10. **打包输出**：执行打包前检查清单后，运行 `node scripts/tavern-cards-forge.mjs pack {project}` → `references/packaging.md`
 
 ## 状态文件

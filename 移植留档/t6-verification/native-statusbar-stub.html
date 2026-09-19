@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; margin: 0; padding: 0; }
+    body { overflow-x: hidden; background: transparent; }
+    [hidden] { display: none !important; }
+    .status-shell { position: relative; width: 100%; max-width: 100%; }
+    .status-progress-track { display: block; overflow: hidden; width: 100%; }
+    [data-progress-fill] { display: block; width: 0; max-width: 100%; transition: width 180ms ease; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+
+    /* 合同CSS（假 schema：主角 姓名/体力/是否觉醒/状态 + 背包） */
+    .status-shell { font-family: system-ui, sans-serif; color: #e8e4d8; background: #1c1c22; border-radius: 10px; padding: 14px 16px; }
+    .status-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+    .status-name { font-size: 1.15em; font-weight: 600; }
+    .status-state { font-size: .85em; color: #9a94a8; border: 1px solid #3a3a46; border-radius: 999px; padding: 1px 10px; }
+    .status-progress-track { height: 8px; background: #2c2c34; border-radius: 999px; }
+    [data-progress-fill] { background: linear-gradient(90deg, #6f8fd6, #9a7fd6); border-radius: 999px; height: 100%; }
+    .status-progress-row { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+    .status-progress-row .label { font-size: .85em; color: #9a94a8; white-space: nowrap; }
+    details.bag { border-top: 1px solid #2c2c34; padding-top: 8px; font-size: .9em; }
+    details.bag summary { cursor: pointer; color: #9a94a8; }
+    details.bag ul { margin: 6px 0 0; padding-left: 18px; }
+    .status-error { color: #d66; }
+  </style>
+</head>
+<body>
+  <section class="status-shell" aria-label="状态栏">
+    <div data-state="loading" role="status">正在读取状态……</div>
+    <div data-state="empty" role="status" hidden>状态尚未初始化。</div>
+    <div data-state="error" role="alert" hidden class="status-error">状态读取失败。</div>
+    <div data-state="content" hidden>
+      <!-- 合同DOM（假 schema 填充） -->
+      <div class="status-head">
+        <span class="status-name" data-mvu-path="stat_data.主角.姓名" data-fallback="未知旅人"></span>
+        <span class="status-state" data-mvu-path="stat_data.主角.状态" data-fallback="未确认"></span>
+      </div>
+      <div class="status-progress-row">
+        <span class="label">体力</span>
+        <div class="status-progress-track" data-mvu-progress="stat_data.主角.体力" data-min="0" data-max="100" data-fallback="未确认" style="flex:1">
+          <span data-progress-value></span>
+          <span data-progress-fill></span>
+        </div>
+      </div>
+      <div class="status-progress-row">
+        <span class="label">觉醒</span>
+        <span data-mvu-path="stat_data.主角.是否觉醒" data-fallback="未确认" data-true-text="已觉醒" data-false-text="未觉醒"></span>
+      </div>
+      <details class="bag">
+        <summary>背包</summary>
+        <ul>
+          <li>学生证 ×<span data-mvu-path="stat_data.背包.学生证.数量" data-fallback="?"></span></li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <script>
+// 测试 stub：模拟酒馆助手全局环境（仅本地验证用，不属于产物）
+window._ = {
+  get: (obj, path) => path.split(".").reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj),
+  has: (obj, path) => { let o = obj; for (const k of path.split(".")) { if (o == null || !(k in o)) return false; o = o[k]; } return true; }
+};
+window.getCurrentMessageId = () => 0;
+window.waitGlobalInitialized = async (name) => { if (!window[name]) throw new Error(name + " not ready"); };
+window.eventOn = () => {};
+window.Mvu = {
+  events: { VARIABLE_INITIALIZED: "vi", VARIABLE_UPDATE_ENDED: "vu" },
+  getMvuData: () => ({
+    stat_data: {
+      主角: { 姓名: "林然", 体力: 80, 是否觉醒: false, 状态: "正常" },
+      背包: { 学生证: { 数量: 1, 描述: "主角的学生证" } }
+    }
+  })
+};
+</script>
+  <script type="module">
+    const root = document.querySelector('.status-shell');
+    const stateNodes = Object.fromEntries(
+      [...root.querySelectorAll('[data-state]')].map(node => [node.dataset.state, node]),
+    );
+
+    function showState(name, message) {
+      Object.values(stateNodes).forEach(node => { node.hidden = true; });
+      const active = stateNodes[name];
+      if (!active) return;
+      if (message && name !== 'content') active.textContent = message;
+      active.hidden = false;
+    }
+
+    function asText(value, fallback) {
+      if (value === undefined || value === null || value === '') return fallback;
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+      return fallback;
+    }
+
+    function renderTextFields(mvuData) {
+      root.querySelectorAll('[data-mvu-path]').forEach(node => {
+        const value = _.get(mvuData, node.dataset.mvuPath);
+        const fallback = node.dataset.fallback || '未确认';
+        if (typeof value === 'boolean') {
+          node.textContent = value ? (node.dataset.trueText || '是') : (node.dataset.falseText || '否');
+          return;
+        }
+        node.textContent = asText(value, fallback);
+      });
+    }
+
+    function renderProgressFields(mvuData) {
+      root.querySelectorAll('[data-mvu-progress]').forEach(node => {
+        const raw = Number(_.get(mvuData, node.dataset.mvuProgress));
+        const minimum = Number(node.dataset.min);
+        const maximum = Number(node.dataset.max);
+        const fallback = node.dataset.fallback || '未确认';
+        const valueNode = node.querySelector('[data-progress-value]');
+        const fillNode = node.querySelector('[data-progress-fill]');
+        const valid = Number.isFinite(raw) && Number.isFinite(minimum) && Number.isFinite(maximum) && maximum > minimum;
+        if (!valid) {
+          if (valueNode) valueNode.textContent = fallback;
+          if (fillNode) fillNode.style.width = '0%';
+          return;
+        }
+        const percentage = Math.min(100, Math.max(0, ((raw - minimum) / (maximum - minimum)) * 100));
+        if (valueNode) valueNode.textContent = String(raw);
+        if (fillNode) fillNode.style.width = `${percentage}%`;
+      });
+    }
+
+    function refresh() {
+      try {
+        const mvuData = Mvu.getMvuData({ type: 'message', message_id: getCurrentMessageId() });
+        if (!mvuData || !_.has(mvuData, 'stat_data')) {
+          showState('empty');
+          return;
+        }
+        renderTextFields(mvuData);
+        renderProgressFields(mvuData);
+        showState('content');
+      } catch (error) {
+        console.error('[MVU状态栏] 读取失败', error);
+        showState('error');
+      }
+    }
+
+    async function init() {
+      try {
+        await waitGlobalInitialized('Mvu');
+        eventOn(Mvu.events.VARIABLE_INITIALIZED, refresh);
+        eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, refresh);
+        refresh();
+      } catch (error) {
+        console.error('[MVU状态栏] 初始化失败', error);
+        showState('error', '状态栏初始化失败。');
+      }
+    }
+
+    void init();
+  </script>
+</body>
+</html>

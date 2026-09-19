@@ -42,19 +42,26 @@ description: "编写 MVU 变量结构 schema.ts。读取创作规划的 mvu 段�
 
 1. 读取已有的 `schema.ts` 和 `创作规划.yaml` 的 `mvu` 段
 2. 按变更类型定位并修改 `schema.ts` 对应字段
-3. 按自查清单核对改动部分
-4. 输出修改摘要与「需主代理同步」清单（按 `references/mvu/guide.md#修改流程` 的变更传播矩阵）
+3. **修改纪律（墨月增补）**：
+   - 保留未要求改变的字段和约束；以实际错误为依据，不把不同写法当作重写理由
+   - 已保存开局值与新结构冲突时，不偷改其他文件，也不为了接受错误初值而放宽正确结构——在「需主代理同步」清单中指出具体字段与需要更新的文件
+   - 空集合也要完整类型，不能因开局为空就写成任意类型
+4. 按自查清单核对改动部分
+5. 输出修改摘要与「需主代理同步」清单（按 `references/mvu/guide.md#修改流程` 的变更传播矩阵）
 
 ## 自查清单
 
 - [ ] `export const Schema` 和 `export type Schema = z.output<typeof Schema>;` 两行都存在
 - [ ] 同一 `z.object` 内无重复字段键
 - [ ] 顶部无 `import` 语句
-- [ ] 已按 `references/mvu/zod-rule.yaml` 全部规则核对
+- [ ] 已按 `references/mvu/zod-rule.yaml` 全部规则核对（含墨月增补节）
+- [ ] 动态值和列表项目都有完整类型（空集合不写任意类型）
+- [ ] 剧情触发、角色知情、单次变化幅度与旧值比较未被伪装成 Schema 能力（归更新规则或脚本）
 
 ## 参考文档
 
 执行任务时，请参考以下文档（路径相对于 tavern-cards skill 目录）：
 
-- Zod 4 规则：`references/mvu/zod-rule.yaml`
+- Zod 4 规则（含墨月增补节）：`references/mvu/zod-rule.yaml`
 - MVU 变量系统总览（含变更传播矩阵）：`references/mvu/guide.md`
+- 结构设计对话层（结构来源存疑时参考确认要点）：`references/mvu/design-dialogue.md`

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>测试C：runtime-only Vue + 渲染函数 h()（备选改写方案）</title>
+  <style>.ok{color:#0a0}.fail{color:#c00}</style>
+  <script src="./vue.runtime.global.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <p id="judge">待判定</p>
+  <script>
+    window.__errors = [];
+    window.addEventListener('error', e => window.__errors.push(String(e.message)));
+    window.addEventListener('load', () => setTimeout(() => {
+      const el = document.querySelector('#app');
+      const judge = document.querySelector('#judge');
+      if (el && el.textContent.includes('渲染成功')) {
+        judge.textContent = '判定：渲染成功（runtime-only + 渲染函数可用）';
+        judge.className = 'ok';
+      } else {
+        judge.textContent = '判定：渲染失败 —— ' + (window.__errors.join(' | ') || '无输出');
+        judge.className = 'fail';
+      }
+    }, 300));
+  </script>
+  <script>
+    const { createApp, h, ref } = Vue;
+    try {
+      const app = createApp({
+        setup() {
+          const msg = ref('渲染成功：渲染函数被 runtime-only 执行');
+          const items = ref(['条目一', '条目二']);
+          return () => h('div', [
+            h('p', { class: 'ok' }, msg.value),
+            h('ul', items.value.map(it => h('li', it))),
+          ]);
+        },
+      });
+      app.mount('#app');
+    } catch (e) { window.__errors.push('mount 异常: ' + e.message); }
+  </script>
+</body>
+</html>
