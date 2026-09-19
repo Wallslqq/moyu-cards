@@ -44,7 +44,7 @@ description: "创建、编辑、评估 SillyTavern 角色卡和世界书（角�
 | 修改 + MVU 变量 | 定位项目 → 确认变更类型 → 执行变更传播（`references/mvu/guide.md#修改流程`） → 一致性校验 |
 | 评估 | 评估流程：分析结构、检查配置、抽查写作质量，生成评估报告 |
 
-**人物条目创作路线判定（墨月路线，可选）**：用户带着成型构想要快速成卡 → 原调色盘路线（`personality-palette.md` 等）；用户只有零散构想或明确要求 AI 不替他决定人物 → 人物生境路线（design 阶段先由 tavern-design 走 intake-router 分流，content 阶段按 `references/contents-creation/character/habitat/` 逐专项创作）。两条路线的最终产物都注册进同一 entryManifest。
+**人物条目创作路线判定（墨月路线，可选）**：用户带着成型构想要快速成卡 → 原调色盘路线（`personality-palette.md` 等）；用户只有零散构想或明确要求 AI 不替他决定人物 → 人物生境路线（design 阶段先由 tavern-design 走 intake-router 分流，content 阶段按 `references/contents-creation/character/habitat/` 逐专项创作）。两条路线的最终产物都注册进同一 entryManifest。**同一项目内不混用两条路线**：入口一次判定，结果写入 `创作规划.yaml` 的 `project.character_route`（`palette` / `habitat`，缺省视为 `palette`）。
 
 **工坊运行总纲（进入创作流程前主动加载）**：`references/moyue/workshop-core.md` —— 对话纪律（每轮只问一个未决点、不重复询问已确认内容、用户说不知道即视为已解决、条件齐备主动停止）在人物生境路线强制生效；机械域（格式化/打包/校验）豁免。
 
