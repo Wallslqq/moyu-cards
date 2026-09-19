@@ -31,3 +31,10 @@ rule:
       z.extend:
         limit: only `z.object`、`z.looseObject`、`z.strictObject` can be extended, even if `z.object(...).prefault({})` could not be extended! i.e. `z.object({...}).extend({...})` is valid, while `z.object({...}).prefault({}).extend({...})` is not
       z.passthrough、z.strict: they are not exist, never ever use them!
+  # ---- 墨月增补节（来源：移植资产 mvu_schema_compilation；运行外壳知识已过滤，差异原因见 references/mvu/schema.md）----
+  - boolean trap: never use `z.coerce.boolean()` — any non-empty string (including `"false"`) would be coerced to `true`; always use `z.boolean()` directly for booleans
+  - complete types for empty collections: all dynamic values and list items must have complete types even when they start empty at initvar — never fall back to `z.any()` / `z.unknown()` just because a collection is empty on start; the future item structure is decided here, not derived from an empty start
+  - schema capability boundary: plot triggers, character knowledge, per-update magnitude and old-value comparison belong to the update rules (`变量更新规则.yaml`) or dedicated scripts — never disguise them as schema capabilities
+  - two kinds of restriction: use `z.transform` + `_.clamp` when the user wants out-of-range values corrected in-place; use validation (`.min()` / `.max()` / `.refine()`) when the user wants invalid values rejected — adopt only the strategy the user confirmed
+  - chain order: finish `.extend()` on an object schema before adding `.prefault()` or `.transform()`
+  - base object types: prefer `z.object` / `z.looseObject` / `z.strictObject` in this workflow
