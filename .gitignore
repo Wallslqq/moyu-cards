@@ -1,0 +1,8 @@
+# WorkBuddy 会话数据（不入库）
+.workbuddy/
+
+# 构建临时区（forge 测试项目等可再生中间产物）
+build/
+
+node_modules/
+Thumbs.db
