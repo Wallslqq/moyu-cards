@@ -44,6 +44,10 @@ description: "创建、编辑、评估 SillyTavern 角色卡和世界书（角�
 | 修改 + MVU 变量 | 定位项目 → 确认变更类型 → 执行变更传播（`references/mvu/guide.md#修改流程`） → 一致性校验 |
 | 评估 | 评估流程：分析结构、检查配置、抽查写作质量，生成评估报告 |
 
+**人物条目创作路线判定（墨月路线，可选）**：用户带着成型构想要快速成卡 → 原调色盘路线（`personality-palette.md` 等）；用户只有零散构想或明确要求 AI 不替他决定人物 → 人物生境路线（design 阶段先由 tavern-design 走 intake-router 分流，content 阶段按 `references/contents-creation/character/habitat/` 逐专项创作）。两条路线的最终产物都注册进同一 entryManifest。
+
+**工坊运行总纲（进入创作流程前主动加载）**：`references/moyue/workshop-core.md` —— 对话纪律（每轮只问一个未决点、不重复询问已确认内容、用户说不知道即视为已解决、条件齐备主动停止）在人物生境路线强制生效；机械域（格式化/打包/校验）豁免。
+
 ## 完整项目流程
 
 > **前置要求**：`cards/{Project}/design-spec.md` 已由 tavern-design 产出。如果还没有，先调用 tavern-design skill 完成大方向讨论与剧情设计，再回到本流程。
@@ -52,10 +56,13 @@ description: "创建、编辑、评估 SillyTavern 角色卡和世界书（角�
 2. **创作规划**：以 `design-spec.md`（及 `故事大纲.yaml`，如有）为输入，展开具体世界信息、角色信息、条目规划、写作风格，产出编写规划文档 `创作规划.yaml`（项目目录下）→ `references/requirements.md`
 3. **创建条目**：按创作规划依次编写，每条创作前做前置 CoT 自检，写完立即注册；按 typeLists 位置分组，每个位置的条目全部完成后调用 `check-agent` 做禁词扫描，全部条目完成后做 DoubleCheck → `references/composition.md`
    - 前置必读：`references/rules.md`（正面规则）和 `references/conventions.md`（注册约定）
+   - 人物条目可选用墨月人物生境路线：`references/contents-creation/character/habitat/` 逐专项创作（配合材料包 `cards/{Project}/materials/*.md`），实测后诊断回流走 `habitat/test-diagnosis.md` + `test-diagnosis-agent`
 4. **编写 MVU 变量**（如需）：调 `schema-agent` 编写 `schema.ts`，主代理按顺序编写 initvar.yaml 与 变量更新规则.yaml → `references/mvu/guide.md`，完成后按收尾步骤复制模板、应用 patch、校验
+   - （可选，新手或结构未定）编写前先走设计对话层 `references/mvu/design-dialogue.md`，用大白话逐轮确认结构；初值与规则的设计确认见 `initvar-design.md`、`update-rule-design.md`
 5. **EJS 条件与段落控制编写 + EJS 收尾检查**（如需 EJS）→ `references/ejs/guide.md`
   - 用 getvar() 读取变量、@@private + const 在条目内定义局部短名
   - 遇到 EJS 运行时报错（如 `xxx is not defined`、`Identifier ... has already been declared`）先读 `references/error-handling.md#SillyTavern-运行时`
+  - 首次引入 EJS 时可先读 `references/ejs/briefing.md` 做需求守门判定（是否真的需要 EJS + 八项合同 → 条目规划字段映射）
 6. **MVU 一致性检查**（如需 MVU）→ 执行 `references/mvu/guide.md` 收尾步骤第 4 步
 7. **运行 configure**：`node scripts/tavern-cards-forge.mjs configure {project}`，自动推导运行时字段 → `references/configuration.md`（仅特殊需求时读取）
 8. **编写开场白**（角色卡）→ `references/contents-creation/first-message.md`
@@ -84,6 +91,8 @@ description: "创建、编辑、评估 SillyTavern 角色卡和世界书（角�
 | check-agent | 禁词扫描 | 需检查的全部条目的文件路径；附内容类型与所属角色/世界观提示 | 「通过 / 不通过」；不通过时按条目给出违规类型、原文、建议 |
 | schema-agent | 编写或修改 `schema.ts` | 项目目录路径、创作规划路径、schema.ts 路径（后两者未提供时默认在项目目录下）；变更场景另传变更类型与变量路径 | 写入 `schema.ts`；变更场景另返回「需主代理同步」清单 |
 | first-message-agent | 叙事式开场白 | 创作规划路径、当前项索引；启用 MVU 时附 initvar 路径（override 或默认） | 写入当前项 `output_path`，并返回正文与自查摘要 |
+| mvu-check-agent | MVU 三文件一致性独立检查（收尾第 4 步） | 项目目录路径；创作规划路径（可选）；检查范围提示（可选） | 检查报告：按严重度排序的问题列表（每项含归属文件与路径）；validate-mvu 运行结果；无问题时说明实际检查范围 |
+| test-diagnosis-agent | 人物实测诊断（可选，人物生境路线） | 人物生境正文、实测回复、用户大白话感受；测试环境说明（可选） | 诊断报告：用户观察/实测证据/诊断假设分层 + 问题归属 + 最小处理方向；只诊断不修改 |
 
 各调用点的具体衔接见 `references/composition.md`、`references/mvu/guide.md`、`references/contents-creation/first-message.md`。
 
@@ -128,23 +137,44 @@ references/
 │   │   ├── tri-faceted.md         —— 三面性
 │   │   ├── rephrase.md            —— 二次解释
 │   │   ├── npc.md                 —— NPC 编写
-│   │   └── character-catalog.md   —— 角色速览
+│   │   ├── character-catalog.md   —— 角色速览
+│   │   └── habitat/               —— 墨月人物生境路线（可选，逐专项创作）
+│   │       ├── basic-information.md   —— 基础信息
+│   │       ├── character-nature.md    —— 人物性情（含调色盘路线导航）
+│   │       ├── life-structure.md      —— 生活结构
+│   │       ├── scene-expression.md    —— 场景表达
+│   │       ├── clothing-style.md      —— 穿衣风格
+│   │       ├── npc-light-habitat.md   —— NPC 轻量人物生境
+│   │       └── test-diagnosis.md      —— 实测诊断与回流（配合 test-diagnosis-agent）
 │   ├── worldbuilding/
 │   │   ├── worldview.md         —— 世界观条目
 │   │   ├── timeline.md          —— 时间线条目
-│   │   └── geography.md         —— 区域条目
+│   │   ├── geography.md         —— 区域条目
+│   │   └── moyue/               —— 墨月世界观路线（按规模分流，可选）
+│   │       ├── large.md         —— 大型世界观
+│   │       ├── medium.md        —— 中型世界观
+│   │       ├── small.md         —— 小型世界观
+│   │       └── creation-rules.md —— 规则-纯提示词条目
 │   ├── first-message.md         —— 开场白创作
+│   ├── opening-style.md         —— 墨月开场白专项：先定文风再写成稿（first-message 增补节的权威源）
 │   ├── presentation.md          —— 呈现方式（扮演准则）
 │   └── stage-guidance.md        —— 阶段指导条目编写
+├── moyue/
+│   ├── workshop-core.md         —— 写卡工坊运行总纲（对话纪律/七要素合同/metacognition/qk-unit，进入创作流程前加载）
+│   └── free-creation.md         —— 自由创作助手（已有项目零散增补）
 ├── mvu/
 │   ├── guide.md                 —— MVU 编写流程
 │   ├── initvar.md               —— 初始变量编写
 │   ├── schema.md                —— MVU 变量类型定义与 schema 写法
+│   ├── design-dialogue.md       —— 变量结构设计对话层（可选前置，墨月）
+│   ├── initvar-design.md        —— 开局值设计确认 + YAML 格式化（墨月）
+│   ├── update-rule-design.md    —— 更新规则设计确认 + YAML 格式化（墨月）
 │   ├── update-rules-guide.md    —— 变量更新规则编写指南
 │   ├── templates.md             —— MVU 模板文件作用与修改规则（按需查阅）
 │   ├── update-rules.yaml        —— 更新规则 YAML 参考示例（按需查阅）
-│   └── zod-rule.yaml            —— Zod 校验规则参考（按需查阅）
+│   └── zod-rule.yaml            —— Zod 校验规则参考，含墨月增补节（按需查阅）
 ├── ejs/
+│   ├── briefing.md              —— EJS 需求守门与工件合同（墨月，实现前判定）
 │   ├── guide.md                 —— EJS 方案编写流程、@@if 条目显隐、段落级条件渲染
 │   ├── reference.md             —— EJS 语法参考手册（按需查阅）
 │   └── features.md              —— EJS 可用特性与 API（按需查阅）

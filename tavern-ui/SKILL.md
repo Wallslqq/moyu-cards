@@ -48,6 +48,17 @@ SillyTavern 本身不提供定制化的前端界面渲染能力。本 skill 的�
 使用 [tavern_helper_template](https://github.com/StageDog/tavern_helper_template) 开发消息楼层内渲染的前端界面。
 常见界面类型：**状态栏**（常驻界面，占位符 `<StatusPlaceHolderImpl/>`）与**开局表单**（交互表单开局，自定义占位符，见 `references/interactive-opening-form.md`）。
 
+### 单 HTML 简易路线（ui_mode: simple，墨月路线）
+
+零工程门槛的状态栏路线：不克隆模板仓库、不构建，单 HTML 即贴即用。**复杂交互（多文件、组件库、拖拽、表单开局等）仍走下方 tavern_helper_template 工程路线**——两条路线按 `创作规划.yaml` 的 `ui_mode` 分流（`simple` / `frontend`）。
+
+1. 需求判定与合同：读 `references/statusbar-simple/briefing.md`（大白话需求翻译、能力三级分级、图床/字体资源预处理、原生/Vue 路线判定）
+2. 生成成品：按路线读 `references/statusbar-simple/native-build.md`（data-mvu-* 声明式绑定，零自定义 JS）或 `references/statusbar-simple/vue-build.md`（骨架内置完整版 Vue CDN，runtime-only 不可编译 DOM 模板已实测），写入项目 `正则/状态栏界面.html`
+
+### 消息前端（message-frontend）
+
+正则替换出单 HTML 界面的消息内前端（信件、日志、论坛、档案等），填补「比 text 复杂、不值得开工程」的中间地带：唯一外层标签 + 重复项目标签的运行时数据协议 + `getChatMessages` 自解析。读 `references/message-frontend/briefing.md`（需求合同）与 `references/message-frontend/build.md`（双工件生成：条目输出规则 + 完整 HTML）。
+
 ## 开发流程
 
 ### 1. 准备开发环境
@@ -303,6 +314,13 @@ references/
 ├── design-thinking.md                         —— 设计构思流程（感官词/交互人格/语义配色/组件构思）
 ├── mvu-variables.md                           —— MVU 变量读写方式（useDataStore / 酒馆助手接口 / Mvu 函数，三写法关系、同步机制、迁移注意点）
 ├── interactive-opening-form.md                —— 开局表单前端界面（交互表单开局：自定义占位符、读写 stat_data、提交触发生成与部署）
+├── statusbar-simple/                          —— 单 HTML 简易状态栏（ui_mode: simple，墨月路线）
+│   ├── briefing.md                            —— 需求判定与创作合同（白话翻译/能力分级/资源预处理/路线判定）
+│   ├── native-build.md                        —— 原生 HTML 路线（data-mvu-* 声明式绑定，固定骨架）
+│   └── vue-build.md                           —— 单 HTML Vue 路线（骨架内置完整版 Vue CDN；安全函数族）
+├── message-frontend/                          —— 消息前端（正则替换单 HTML 界面，墨月路线）
+│   ├── briefing.md                            —— 需求收集与前端创作合同（输出协议/解析策略/实现基线）
+│   └── build.md                               —— 成品生成（条目输出规则 + 完整 HTML 双工件）
 └── environments/
     ├── tavern-helper-template.md              —— tavern_helper_template 开发环境（目录骨架/webpack/CI/实时预览/预注入变量）（按需查阅）
     └── tavern-helper-runtime.md               —— Tavern-Helper 运行时（iframe 隔离/生命周期/变量作用域/错误排查速查表）（按需查阅）

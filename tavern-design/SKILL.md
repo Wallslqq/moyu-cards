@@ -52,6 +52,13 @@ description: "角色卡与世界书的叙事设计阶段：大方向讨论、世
 
 展示 `design-spec.md` 并暂停等待用户确认。用户确认后，告知用户接下来可交给 tavern-cards 进行项目创建与创作规划。
 
+### 可选入口（墨月路线，按需在大方向讨论期间启用）
+
+进入讨论流程前建议先读 tavern-cards skill 的 `references/moyue/workshop-core.md` 工坊运行总纲（对话纪律：每轮只问一个未决点、不重复询问已确认内容、用户说不知道即视为已解决、条件齐备主动停止）。
+
+- **人设起点分流**：用户角色构想零散、或明确要求 AI 不替他决定人物时启用——读 `references/moyue/intake-router.md`，把原始构想整理分流为人物生境材料包（写入 `cards/{Project}/materials/*.md`，七类标签格式），供 tavern-cards 的人物生境路线逐专项消费。用户已有成型人设构想时不启用，正常产出 design-spec.md 即可。
+- **世界观规模判定**：读 `references/moyue/worldview-scale.md`，判定世界观规模（大/中/小/规则-纯提示词），判定结果写入 `design-spec.md`（tavern-cards 侧再同步进创作规划.yaml），供 content 阶段选择对应的世界观创作文档（`references/contents-creation/worldbuilding/moyue/`）。
+
 ## 子代理
 
 调用时由 Agent harness 注入任务，主代理在 task 字符串里携带下表「输入」一列的参数，并按下表「输出」一列处理返回。
@@ -73,6 +80,9 @@ description: "角色卡与世界书的叙事设计阶段：大方向讨论、世
 ```
 references/
 ├── design-guide.md             —— 大方向讨论指导与 design-spec.md 格式
+├── moyue/
+│   ├── intake-router.md        —— 墨月人设起点分流（原始构想整理与材料包，可选入口）
+│   └── worldview-scale.md      —— 墨月世界观规模判定与分流（可选入口）
 ├── conversion.md               —— 从材料转化流程（主文档）
 └── conversion/
     ├── outline.md              —— 大纲构建指导（长文本处理、分卷、子代理分配）
